@@ -1,25 +1,15 @@
-// HTML Elements
-const statusDiv = document.querySelector('.status');
-const resetDiv = document.querySelector('.reset');
-const cellDivs = document.querySelectorAll('.game-cell');
-const xScore_element = document.querySelector('.xScore');
-const oScore_element = document.querySelector('.oScore');
-const again = document.querySelector('.again');
-
-// game constants
-const xSymbol = 'X';
-const oSymbol = 'O';
-
-let switchButton = false;
 
 // game variables
+let counter = 0;
 let won = false;
 let winner = " ";
-let field = [" ", " ", " ", " ", " ", " ", " ", " ", " ",];
+let field = ["0", " ", " ", " ", " ", " ", " ", " ", " ", " "];
 let player = "X";
 let scoreX = 0;
 let scoreO = 0;
 
+let draw = false;
+let lockscore = false;
 let lock1 = false;
 let lock2 = false;
 let lock3 = false;
@@ -29,6 +19,7 @@ let lock6 = false;
 let lock7 = false;
 let lock8 = false;
 let lock9 = false;
+
 
 document.getElementById("1").onclick = function () {
     if (player == "X" && lock1 == false) {
@@ -42,7 +33,7 @@ document.getElementById("1").onclick = function () {
         player = "X";
         lock1 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("2").onclick = function () {
     if (player == "X" && lock2 == false) {
@@ -56,7 +47,7 @@ document.getElementById("2").onclick = function () {
         player = "X";
         lock2 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("3").onclick = function () {
     if (player == "X" && lock3 == false) {
@@ -70,7 +61,7 @@ document.getElementById("3").onclick = function () {
         player = "X";
         lock3 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("4").onclick = function () {
     if (player == "X" && lock4 == false) {
@@ -84,7 +75,7 @@ document.getElementById("4").onclick = function () {
         player = "X";
         lock4 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("5").onclick = function () {
     if (player == "X" && lock5 == false) {
@@ -98,7 +89,7 @@ document.getElementById("5").onclick = function () {
         player = "X";
         lock5 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("6").onclick = function () {
     if (player == "X" && lock6 == false) {
@@ -112,7 +103,7 @@ document.getElementById("6").onclick = function () {
         player = "X";
         lock6 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("7").onclick = function () {
     if (player == "X" && lock7 == false) {
@@ -126,7 +117,7 @@ document.getElementById("7").onclick = function () {
         player = "X";
         lock7 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("8").onclick = function () {
     if (player == "X" && lock8 == false) {
@@ -140,7 +131,7 @@ document.getElementById("8").onclick = function () {
         player = "X";
         lock8 = true;
     }
-    status();
+    gamestatus();
 }
 document.getElementById("9").onclick = function () {
 
@@ -155,12 +146,16 @@ document.getElementById("9").onclick = function () {
         player = "X";
         lock9 = true;
     }
-    status();
+    gamestatus();
 }
 
-function status() {
+function gamestatus() {
+    counter++;
     document.getElementById("status").innerHTML = "Spieler: " + player;
     checkwinner();
+    console.log(field);
+    console.log(winner);
+    console.log(won);
 }
 
 function checkwinner() {
@@ -176,37 +171,43 @@ function checkwinner() {
     const bottomMiddle = field[8];
     const bottomRight = field[9];
 
-    if (topLeft == topMiddle && topMiddle == topRight) { //oben links nach rechts
+    if (topLeft == topMiddle && topMiddle == topRight && topLeft != " ") { //oben links nach rechts
         winner = topLeft;
         won = true;
-    } else if (middleLeft == middleMiddle && middleMiddle == middleRight) {  //mitte links nach rechts
+        console.log("tescht");
+    } else if (middleLeft == middleMiddle && middleMiddle == middleRight && middleLeft != " ") {  //mitte links nach rechts
         winner = middleLeft;
         won = true;
-    } else if (bottomLeft == bottomMiddle && bottomMiddle == bottomRight) { //unten links nach rechts
+    } else if (bottomLeft == bottomMiddle && bottomMiddle == bottomRight && bottomLeft != " ") { //unten links nach rechts
         winner = bottomLeft;
         won = true;
-    } else if (topLeft == middleLeft && middleLeft == bottomLeft) {  //oben nach unten links
+    } else if (topLeft == middleLeft && middleLeft == bottomLeft && topLeft != " ") {  //oben nach unten links
         winner = topLeft;
         won = true;
-    } else if (topMiddle == middleMiddle && middleMiddle == bottomMiddle) { //oben nach unten mitte
+    } else if (topMiddle == middleMiddle && middleMiddle == bottomMiddle  && topMiddle != " ") { //oben nach unten mitte
         winner = topMiddle;
         won = true;
-    } else if (topRight == middleRight && middleRight == bottomRight) { //oben nach unten rechts
+    } else if (topRight == middleRight && middleRight == bottomRight && topRight != " ") { //oben nach unten rechts
         winner = topRight;
         won = true;
-    } else if (topLeft == middleMiddle && middleMiddle == bottomRight) { //oben links nach unten rechts diagonal
+    } else if (topLeft == middleMiddle && middleMiddle == bottomRight && topLeft != " ") { //oben links nach unten rechts diagonal
         winner = topLeft;
         won = true;
-    } else if (bottomLeft == middleMiddle && middleMiddle == topRight) { //unten links nach oben rechts diagonal
+    } else if (bottomLeft == middleMiddle && middleMiddle == topRight && bottomLeft != " ") { //unten links nach oben rechts diagonal
         winner = bottomLeft;
         won = true;
+    } else if (field.filter(box => box == " ").length == 0) { //  } else if (field[1] != " " && field[2] != " " && field[3] != " " && field[4] != " " && field[5] != " " && field[6] != " " && field[7] != " " && field[8] != " " && field[9] != " ") {
+
+        document.getElementById("status").innerHTML = "Unentschieden";
     }
+
     if (winner != " ") {
-        if (winner == "X") {
+        if (winner == "X" && lockscore == false) {
             scoreX++;
-        } else if (winner == "O") {
+        } else if (winner == "O" && lockscore == false) {
             scoreO++;
         }
+        lockscore = true;
 
         lock1 = true;
         lock2 = true;
@@ -217,17 +218,24 @@ function checkwinner() {
         lock7 = true;
         lock8 = true;
         lock9 = true;
+
         document.getElementById("status").innerHTML = "GEWONNEN! Gewinner: Player " + winner;
         document.getElementById("scores").innerHTML = "Player X: " + scoreX + "<p>Player O: " + scoreO;
     }
 }
+const checkdraw = (currentValue) => currentValue != " ";
+
+//function checkdraw(field) {
+//   return field != " ";
+//}
 
 function reset() {
     won = false;
     winner = " ";
-    field = [" ", " ", " ", " ", " ", " ", " ", " ", " ", " "];
+    field = ["0", " ", " ", " ", " ", " ", " ", " ", " ", " "];
     player = "X";
 
+    lockscore = false;
     lock1 = false;
     lock2 = false;
     lock3 = false;
@@ -237,7 +245,6 @@ function reset() {
     lock7 = false;
     lock8 = false;
     lock9 = false;
-
     document.getElementById("1").innerHTML = field[1];
     document.getElementById("2").innerHTML = field[2];
     document.getElementById("3").innerHTML = field[3];
@@ -247,70 +254,7 @@ function reset() {
     document.getElementById("7").innerHTML = field[7];
     document.getElementById("8").innerHTML = field[8];
     document.getElementById("9").innerHTML = field[9];
-
 }
-
-/*
-
-// functions
-const handleWin = (field) => {
-
-    // Wer hat gewonnen?
-
-    // Gewinner anzeigen, Score +1
-    // Score aktuallisieren
-
-}
-
-const checkGameStatus = () => {
-
-
-    // Alle Felder als const festlegen
-
-    // check winner
-    if (topLeft && topLeft === topMiddle && topLeft === topRight) {
-        handleWin(topLeft);
-
-        // cellDivs 'won' class adden
-
-    } else if (topLeft && topMiddle && topRight && middleLeft && middleMiddle && middleRight && bottomLeft && bottomMiddle && bottomRight) {
-        gameIsLive = false;
-        statusDiv.innerHTML = 'Unentschieden!';
-    } else {
-
-        // Player switchen!
-
-    }
-};
-
-
-// Handlers
-const handleReset = () => {
-
-    // Spiel zurücksetzten
-
-};
-
-const handleCellClick = (e) => {
-    const classList = e.target.classList;
-
-    // checken ob das Feld schon besetzt ist
-
-    // O bzw. X als class adden
-
-    // winner checken
-
-};
-
-
-// listeners
-//resetDiv.addEventListener('click', handleReset);
-
-for (const cellDiv of cellDivs) {
-
-    // cellDiv click listener adden
-
-}*/
 
 
 // Dark Theme// check for saved "lightMode" in localStorage
