@@ -223,11 +223,7 @@ function checkwinner() {
         document.getElementById("scores").innerHTML = "Player X: " + scoreX + "<p>Player O: " + scoreO;
     }
 }
-const checkdraw = (currentValue) => currentValue != " ";
 
-//function checkdraw(field) {
-//   return field != " ";
-//}
 
 function reset() {
     won = false;
