@@ -252,6 +252,77 @@ function reset() {
     document.getElementById("9").innerHTML = field[9];
 }
 
+function minimax(field, depth, isMaximizing) {
+    let score = checkScore();
+
+    if (score == 10) return score - depth;
+    if (score == -10) return score + depth;
+    if (isMovesLeft(field) == false) return 0;
+
+    if (isMaximizing) {
+        let best = -1000;
+        for (let i = 1; i <= 9; i++) {
+            if (field[i] === " ") {
+                field[i] = "O";
+                best = Math.max(best, minimax(field, depth + 1, false));
+                field[i] = " ";
+            }
+        }
+        return best;
+    } else {
+        let best = 1000;
+        for (let i = 1; i <= 9; i++) {
+            if (field[i] === " ") {
+                field[i] = "X";
+                best = Math.min(best, minimax(field, depth + 1, true));
+                field[i] = " ";
+            }
+        }
+        return best;
+    }
+}
+
+function isMovesLeft(field) {
+    for (let i = 1; i <= 9; i++) {
+        if (field[i] === " ") return true;
+    }
+    return false;
+}
+
+function checkScore() {
+    if (winner === "O") return 10;
+    if (winner === "X") return -10;
+    return 0;
+}
+
+function botPlay() {
+    if (won) return;
+
+    let bestVal = -1000;
+    let bestMove = -1;
+
+    for (let i = 1; i <= 9; i++) {
+        if (field[i] === " ") {
+            field[i] = "O";
+            let moveVal = minimax(field, 0, false);
+            field[i] = " ";
+            if (moveVal > bestVal) {
+                bestMove = i;
+                bestVal = moveVal;
+            }
+        }
+    }
+
+    if (bestMove !== -1) {
+        field[bestMove] = "O";
+        document.getElementById(bestMove.toString()).innerHTML = "O";
+        eval("lock" + bestMove + " = true");
+    }
+
+    gamestatus();
+}
+
+
 
 // Dark Theme// check for saved "lightMode" in localStorage
 let lightMode = localStorage.getItem("lightMode");
@@ -293,3 +364,4 @@ lightModeToggle.addEventListener("click", () => {
         disablelightMode();
     }
 });
+
