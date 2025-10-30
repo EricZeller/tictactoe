@@ -1,164 +1,316 @@
-
-// game variables
-let counter = 0;
-let won = false;
-let winner = " ";
-let field = ["0", " ", " ", " ", " ", " ", " ", " ", " ", " "];
-let player = "X";
-let scoreX = 0;
-let scoreO = 0;
-
-let draw = false;
-let lockscore = false;
-let lock1 = false;
-let lock2 = false;
-let lock3 = false;
-let lock4 = false;
-let lock5 = false;
-let lock6 = false;
-let lock7 = false;
-let lock8 = false;
-let lock9 = false;
+// === FIREBASE INITIALISIERUNG ===
+// ERSETZE DIESE KONFIGURATION MIT DEINER EIGENEN!
 
 
-document.getElementById("1").onclick = function () {
-    if (player == "X" && lock1 == false) {
-        field[1] = "X";
-        document.getElementById("1").innerHTML = field[1];
-        player = "O";
-        lock1 = true;
-    } else if (player == "O" && lock1 == false) {
-        field[1] = "O";
-        document.getElementById("1").innerHTML = field[1];
-        player = "X";
-        lock1 = true;
-    }
-    gamestatus();
-}
-document.getElementById("2").onclick = function () {
-    if (player == "X" && lock2 == false) {
-        field[2] = "X";
-        document.getElementById("2").innerHTML = field[2];
-        player = "O";
-        lock2 = true;
-    } else if (player == "O" && lock2 == false) {
-        field[2] = "O";
-        document.getElementById("2").innerHTML = field[2];
-        player = "X";
-        lock2 = true;
-    }
-    gamestatus();
-}
-document.getElementById("3").onclick = function () {
-    if (player == "X" && lock3 == false) {
-        field[3] = "X";
-        document.getElementById("3").innerHTML = field[3];
-        player = "O";
-        lock3 = true;
-    } else if (player == "O" && lock3 == false) {
-        field[3] = "O";
-        document.getElementById("3").innerHTML = field[3];
-        player = "X";
-        lock3 = true;
-    }
-    gamestatus();
-}
-document.getElementById("4").onclick = function () {
-    if (player == "X" && lock4 == false) {
-        field[4] = "X";
-        document.getElementById("4").innerHTML = field[4];
-        player = "O";
-        lock4 = true;
-    } else if (player == "O" && lock4 == false) {
-        field[4] = "O";
-        document.getElementById("4").innerHTML = field[4];
-        player = "X";
-        lock4 = true;
-    }
-    gamestatus();
-}
-document.getElementById("5").onclick = function () {
-    if (player == "X" && lock5 == false) {
-        field[5] = "X";
-        document.getElementById("5").innerHTML = field[5];
-        player = "O";
-        lock5 = true;
-    } else if (player == "O" && lock5 == false) {
-        field[5] = "O";
-        document.getElementById("5").innerHTML = field[5];
-        player = "X";
-        lock5 = true;
-    }
-    gamestatus();
-}
-document.getElementById("6").onclick = function () {
-    if (player == "X" && lock6 == false) {
-        field[6] = "X";
-        document.getElementById("6").innerHTML = field[6];
-        player = "O";
-        lock6 = true;
-    } else if (player == "O" && lock6 == false) {
-        field[6] = "O";
-        document.getElementById("6").innerHTML = field[6];
-        player = "X";
-        lock6 = true;
-    }
-    gamestatus();
-}
-document.getElementById("7").onclick = function () {
-    if (player == "X" && lock7 == false) {
-        field[7] = "X";
-        document.getElementById("7").innerHTML = field[7];
-        player = "O";
-        lock7 = true;
-    } else if (player == "O" && lock7 == false) {
-        field[7] = "O";
-        document.getElementById("7").innerHTML = field[7];
-        player = "X";
-        lock7 = true;
-    }
-    gamestatus();
-}
-document.getElementById("8").onclick = function () {
-    if (player == "X" && lock8 == false) {
-        field[8] = "X";
-        document.getElementById("8").innerHTML = field[8];
-        player = "O";
-        lock8 = true;
-    } else if (player == "O" && lock8 == false) {
-        field[8] = "O";
-        document.getElementById("8").innerHTML = field[8];
-        player = "X";
-        lock8 = true;
-    }
-    gamestatus();
-}
-document.getElementById("9").onclick = function () {
+// Firebase initialisieren
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-    if (player == "X" && lock9 == false) {
-        field[9] = "X";
-        document.getElementById("9").innerHTML = field[9];
-        player = "O";
-        lock9 = true;
-    } else if (player == "O" && lock9 == false) {
-        field[9] = "O";
-        document.getElementById("9").innerHTML = field[9];
-        player = "X";
-        lock9 = true;
+// === SPIEL VARIABLEN ===
+let currentPlayerId = null;
+let currentPlayerName = "";
+let currentRoomId = null;
+let currentSymbol = null;
+let isMyTurn = false;
+
+// === SPIELER LOGIN ===
+function login() {
+    const playerName = document.getElementById('playerName').value;
+    if (!playerName) {
+        alert("Bitte gib deinen Namen ein!");
+        return;
     }
-    gamestatus();
+
+    currentPlayerName = playerName;
+    currentPlayerId = generatePlayerId();
+
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('game-section').style.display = 'block';
+    document.getElementById('playerInfo').innerHTML = `Spieler: ${playerName}`;
 }
 
-function gamestatus() {
-    counter++;
-    document.getElementById("status").innerHTML = "Spieler: " + player;
-    checkwinner();
-    console.log(field);
-    console.log(winner);
-    console.log(won);
+// === SPIEL FUNKTIONEN ===
+function createGame() {
+    const roomId = generateRoomCode();
+    currentRoomId = roomId;
+    currentSymbol = "X";
+    
+    const gameState = {
+        field: ["0", " ", " ", " ", " ", " ", " ", " ", " ", " "],
+        currentPlayer: "X",
+        players: {
+            X: { 
+                id: currentPlayerId, 
+                name: currentPlayerName 
+            },
+            O: null  // Explizit null setzen
+        },
+        winner: null,
+        status: "waiting",
+        scores: {
+            X: 0,
+            O: 0
+        },
+        createdAt: Date.now()
+    };
+    
+    console.log("Erstelle neues Spiel:", roomId);
+    
+    const gameRef = database.ref('games/' + roomId);
+    gameRef.set(gameState)
+        .then(() => {
+            console.log("Spiel erfolgreich erstellt");
+            listenToGame(roomId);
+            
+            document.getElementById('roomInfo').innerHTML = `
+                <h3>Spielraum: ${roomId}</h3>
+                <p>Warte auf zweiten Spieler...</p>
+                <p>Dein Symbol: ${currentSymbol}</p>
+                <p><strong>Gib diesen Code dem zweiten Spieler: ${roomId}</strong></p>
+                <button onclick="showAllGames()">Debug: Zeige alle Spiele</button>
+            `;
+        })
+        .catch((error) => {
+            console.error("Fehler beim Erstellen:", error);
+            alert("Fehler beim Erstellen des Spiels: " + error.message);
+        });
 }
 
-function checkwinner() {
+function joinGame() {
+    const roomCode = document.getElementById('roomCode').value.toUpperCase();
+    if (!roomCode) {
+        alert("Bitte gib einen Raum-Code ein!");
+        return;
+    }
+    
+    currentRoomId = roomCode;
+    
+    const gameRef = database.ref('games/' + roomCode);
+    
+    // Prüfen ob Raum existiert
+    gameRef.once('value').then((snapshot) => {
+        if (!snapshot.exists()) {
+            alert("Raum existiert nicht!");
+            return;
+        }
+        
+        const gameState = snapshot.val();
+        
+        console.log("Aktueller Spielzustand:", gameState);
+        console.log("Spieler O:", gameState.players.O);
+        
+        // KORREKTUR: Prüfe auf undefined oder null
+        const isPlayerOFree = gameState.players.O === null || 
+                              gameState.players.O === undefined || 
+                              (typeof gameState.players.O === 'object' && Object.keys(gameState.players.O).length === 0);
+        
+        const isPlayerXFree = gameState.players.X === null || 
+                              gameState.players.X === undefined || 
+                              (typeof gameState.players.X === 'object' && Object.keys(gameState.players.X).length === 0);
+        
+        console.log("Ist Spieler O frei?", isPlayerOFree);
+        console.log("Ist Spieler X frei?", isPlayerXFree);
+        
+        if (isPlayerOFree) {
+            currentSymbol = "O";
+            console.log("Beitreten als Spieler O");
+            
+            // Spieler O hinzufügen
+            const playerOData = { 
+                id: currentPlayerId, 
+                name: currentPlayerName 
+            };
+            
+            gameRef.update({
+                'players/O': playerOData,
+                'status': 'playing'
+            }).then(() => {
+                console.log("Spieler O erfolgreich hinzugefügt:", playerOData);
+                listenToGame(roomCode);
+                document.getElementById('roomInfo').innerHTML = `
+                    <h3>Spielraum: ${currentRoomId}</h3>
+                    <p>Beigetreten als Spieler O</p>
+                    <p>Spieler X: ${gameState.players.X?.name || 'Unbekannt'}</p>
+                    <p>Dein Symbol: ${currentSymbol}</p>
+                `;
+            });
+            
+        } else if (isPlayerXFree) {
+            currentSymbol = "X";
+            console.log("Beitreten als Spieler X");
+            
+            const playerXData = { 
+                id: currentPlayerId, 
+                name: currentPlayerName 
+            };
+            
+            gameRef.update({
+                'players/X': playerXData,
+                'status': 'playing'
+            }).then(() => {
+                console.log("Spieler X erfolgreich hinzugefügt:", playerXData);
+                listenToGame(roomCode);
+                document.getElementById('roomInfo').innerHTML = `
+                    <h3>Spielraum: ${currentRoomId}</h3>
+                    <p>Beigetreten als Spieler X</p>
+                    <p>Spieler O: ${gameState.players.O?.name || 'Unbekannt'}</p>
+                    <p>Dein Symbol: ${currentSymbol}</p>
+                `;
+            });
+            
+        } else {
+            console.log("Beide Plätze belegt - Spieler X:", gameState.players.X, "Spieler O:", gameState.players.O);
+            alert("Raum ist bereits voll! Spieler X: " + 
+                  (gameState.players.X?.name || "unbekannt") + 
+                  ", Spieler O: " + 
+                  (gameState.players.O?.name || "unbekannt"));
+        }
+        
+    }).catch((error) => {
+        console.error("Fehler beim Beitreten:", error);
+        alert("Fehler: " + error.message);
+    });
+}
+
+// === ECHTZEIT UPDATES ===
+function listenToGame(roomId) {
+    const gameRef = database.ref('games/' + roomId);
+    
+    gameRef.on('value', (snapshot) => {
+        const gameState = snapshot.val();
+        if (!gameState) {
+            console.log("Spielraum wurde gelöscht");
+            return;
+        }
+        
+        console.log("Spielupdate erhalten:", gameState);
+        updateGameUI(gameState);
+        updateGameStatus(gameState);
+    });
+}
+
+function updateGameUI(gameState) {
+    // Spielfeld aktualisieren
+    for (let i = 1; i <= 9; i++) {
+        document.getElementById(i.toString()).innerHTML = gameState.field[i];
+    }
+
+    // Spielstatus anzeigen
+    document.getElementById('roomInfo').innerHTML = `
+        <h3>Spielraum: ${currentRoomId}</h3>
+        <p>Spieler X: ${gameState.players.X?.name || 'Wartet...'}</p>
+        <p>Spieler O: ${gameState.players.O?.name || 'Wartet...'}</p>
+        <p>Dein Symbol: ${currentSymbol}</p>
+    `;
+}
+
+function updateGameStatus(gameState) {
+    // Prüfen ob ich am Zug bin
+    isMyTurn = (gameState.currentPlayer === currentSymbol);
+    
+    if (gameState.status === "waiting") {
+        document.getElementById('status').innerHTML = "Warte auf zweiten Spieler...";
+    } else if (gameState.winner) {
+        if (gameState.winner === "draw") {
+            document.getElementById('status').innerHTML = "Unentschieden!";
+        } else {
+            document.getElementById('status').innerHTML = 
+                `🎉 SPIEL VORBEI! Gewinner: Spieler ${gameState.winner}`;
+        }
+        
+        // Score anzeigen
+        const scoreX = gameState.scores?.X || 0;
+        const scoreO = gameState.scores?.O || 0;
+        document.getElementById('scores').innerHTML = 
+            `Spieler X: ${scoreX}<p>Spieler O: ${scoreO}`;
+            
+    } else {
+        document.getElementById('status').innerHTML = 
+            `Aktueller Spieler: ${gameState.currentPlayer} ${isMyTurn ? '(DU bist dran!)' : ''}`;
+    }
+}
+
+// === ZUG MACHEN ===
+function makeMove(cellId) {
+    if (!isMyTurn || !currentRoomId) {
+        alert("Du bist nicht am Zug!");
+        return;
+    }
+    
+    const gameRef = database.ref('games/' + currentRoomId);
+    
+    gameRef.once('value').then((snapshot) => {
+        const gameState = snapshot.val();
+        
+        // Prüfen ob Feld frei ist
+        if (gameState.field[cellId] !== " ") {
+            alert("Feld ist bereits belegt!");
+            return;
+        }
+        
+        // Prüfen ob Spiel bereits beendet
+        if (gameState.winner) {
+            alert("Spiel ist bereits beendet!");
+            return;
+        }
+        
+        // **NEU: Temporäres Feld mit dem aktuellen Zug erstellen**
+        const updatedField = [...gameState.field]; // Kopie des Feldes
+        updatedField[cellId] = currentSymbol; // Zug hinzufügen
+        
+        console.log("Altes Feld:", gameState.field);
+        console.log("Neues Feld mit Zug:", updatedField);
+        
+        // **Gewinner mit dem AKTUALISIERTEN Feld prüfen**
+        const gameResult = checkWinner(updatedField, cellId);
+        console.log("Gewinner-Check ergibt:", gameResult);
+        
+        // Updates vorbereiten
+        const updates = {};
+        updates[`field/${cellId}`] = currentSymbol; // Feld updaten
+        
+        // Spieler wechseln
+        const nextPlayer = currentSymbol === "X" ? "O" : "X";
+        updates['currentPlayer'] = nextPlayer;
+        
+        // Wenn es einen Gewinner oder Unentschieden gibt
+        if (gameResult) {
+            updates['winner'] = gameResult;
+            
+            // Score aktualisieren
+            if (gameResult === "X" || gameResult === "O") {
+                updates[`scores/${gameResult}`] = (gameState.scores?.[gameResult] || 0) + 1;
+            }
+        }
+        
+        // Update zu Firebase senden
+        gameRef.update(updates)
+            .then(() => {
+                console.log("Zug erfolgreich gemacht auf Feld", cellId);
+                if (gameResult) {
+                    console.log("Spiel beendet! Ergebnis:", gameResult);
+                }
+            })
+            .catch((error) => {
+                console.error("Fehler beim Zug:", error);
+            });
+        
+    }).catch((error) => {
+        console.error("Fehler beim Zug:", error);
+    });
+}
+
+// === HILFSFUNKTIONEN ===
+function generatePlayerId() {
+    return 'player_' + Math.random().toString(36).substr(2, 9);
+}
+
+function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
+}
+
+function checkWinner(field, lastMove) {
+    // DEINE VOLLSTÄNDIGE GEWINN-PRÜFLOGIK
     const topLeft = field[1];
     const topMiddle = field[2];
     const topRight = field[3];
@@ -171,125 +323,183 @@ function checkwinner() {
     const bottomMiddle = field[8];
     const bottomRight = field[9];
 
-    if (topLeft == topMiddle && topMiddle == topRight && topLeft != " ") { //oben links nach rechts
+    let winner = null;
+
+    // Gewinnbedingungen prüfen
+    if (topLeft == topMiddle && topMiddle == topRight && topLeft != " ") {
         winner = topLeft;
-        won = true;
-        console.log("tescht");
-    } else if (middleLeft == middleMiddle && middleMiddle == middleRight && middleLeft != " ") {  //mitte links nach rechts
+    } else if (middleLeft == middleMiddle && middleMiddle == middleRight && middleLeft != " ") {
         winner = middleLeft;
-        won = true;
-    } else if (bottomLeft == bottomMiddle && bottomMiddle == bottomRight && bottomLeft != " ") { //unten links nach rechts
+    } else if (bottomLeft == bottomMiddle && bottomMiddle == bottomRight && bottomLeft != " ") {
         winner = bottomLeft;
-        won = true;
-    } else if (topLeft == middleLeft && middleLeft == bottomLeft && topLeft != " ") {  //oben nach unten links
+    } else if (topLeft == middleLeft && middleLeft == bottomLeft && topLeft != " ") {
         winner = topLeft;
-        won = true;
-    } else if (topMiddle == middleMiddle && middleMiddle == bottomMiddle  && topMiddle != " ") { //oben nach unten mitte
+    } else if (topMiddle == middleMiddle && middleMiddle == bottomMiddle && topMiddle != " ") {
         winner = topMiddle;
-        won = true;
-    } else if (topRight == middleRight && middleRight == bottomRight && topRight != " ") { //oben nach unten rechts
+    } else if (topRight == middleRight && middleRight == bottomRight && topRight != " ") {
         winner = topRight;
-        won = true;
-    } else if (topLeft == middleMiddle && middleMiddle == bottomRight && topLeft != " ") { //oben links nach unten rechts diagonal
+    } else if (topLeft == middleMiddle && middleMiddle == bottomRight && topLeft != " ") {
         winner = topLeft;
-        won = true;
-    } else if (bottomLeft == middleMiddle && middleMiddle == topRight && bottomLeft != " ") { //unten links nach oben rechts diagonal
+    } else if (bottomLeft == middleMiddle && middleMiddle == topRight && bottomLeft != " ") {
         winner = bottomLeft;
-        won = true;
-    } else if (field.filter(box => box == " ").length == 0) { //  } else if (field[1] != " " && field[2] != " " && field[3] != " " && field[4] != " " && field[5] != " " && field[6] != " " && field[7] != " " && field[8] != " " && field[9] != " ") {
-
-        document.getElementById("status").innerHTML = "Unentschieden";
     }
-
-    if (winner != " ") {
-        if (winner == "X" && lockscore == false) {
-            scoreX++;
-        } else if (winner == "O" && lockscore == false) {
-            scoreO++;
-        }
-        lockscore = true;
-
-        lock1 = true;
-        lock2 = true;
-        lock3 = true;
-        lock4 = true;
-        lock5 = true;
-        lock6 = true;
-        lock7 = true;
-        lock8 = true;
-        lock9 = true;
-
-        document.getElementById("status").innerHTML = "GEWONNEN! Gewinner: Player " + winner;
-        document.getElementById("scores").innerHTML = "Player X: " + scoreX + "<p>Player O: " + scoreO;
-    }
-}
-
-
-function reset() {
-    won = false;
-    winner = " ";
-    field = ["0", " ", " ", " ", " ", " ", " ", " ", " ", " "];
-    player = "X";
-
-    lockscore = false;
-    lock1 = false;
-    lock2 = false;
-    lock3 = false;
-    lock4 = false;
-    lock5 = false;
-    lock6 = false;
-    lock7 = false;
-    lock8 = false;
-    lock9 = false;
-    document.getElementById("1").innerHTML = field[1];
-    document.getElementById("2").innerHTML = field[2];
-    document.getElementById("3").innerHTML = field[3];
-    document.getElementById("4").innerHTML = field[4];
-    document.getElementById("5").innerHTML = field[5];
-    document.getElementById("6").innerHTML = field[6];
-    document.getElementById("7").innerHTML = field[7];
-    document.getElementById("8").innerHTML = field[8];
-    document.getElementById("9").innerHTML = field[9];
-}
-
-
-// Dark Theme// check for saved "lightMode" in localStorage
-let lightMode = localStorage.getItem("lightMode");
-
-const lightModeToggle = document.querySelector("#icon");
-
-const enablelightMode = () => {
-    // 1. Add the class to the body
-    document.body.classList.add("lightMode");
-    icon.src = "moon.png"
-    // 2. Update lightMode in localStorage
-    localStorage.setItem("lightMode", "enabled");
-}
-
-const disablelightMode = () => {
-    // 1. Remove the class from the body
-    document.body.classList.remove("lightMode");
-    icon.src = "sun.png"
-    // 2. Update lightMode in localStorage 
-    localStorage.setItem("lightMode", null);
-}
-
-// If the user already visited and enabled lightMode
-// start things off with it on
-if (lightMode === "enabled") {
-    enablelightMode();
-}
-
-// When someone clicks the button
-lightModeToggle.addEventListener("click", () => {
-    // get their lightMode setting
-    lightMode = localStorage.getItem("lightMode");
-
-    // if it not current enabled, enable it
-    if (lightMode !== "enabled") {
-        enablelightMode();
-        // if it has been enabled, turn it off  
+    
+    // Unentschieden prüfen
+    const isDraw = field.filter(box => box == " ").length === 0;
+    
+    if (winner) {
+        return winner; // "X" oder "O"
+    } else if (isDraw) {
+        return "draw"; // Unentschieden
     } else {
-        disablelightMode();
+        return null; // Spiel läuft weiter
     }
-});
+}
+
+function isBoardFull(field) {
+    for (let i = 1; i <= 9; i++) {
+        if (field[i] === " ") return false;
+    }
+    return true;
+}
+
+// === EVENT LISTENER FÜR DAS SPIELFELD ===
+for (let i = 1; i <= 9; i++) {
+    document.getElementById(i.toString()).onclick = function () {
+        makeMove(i);
+    };
+}
+
+// Reset Funktion anpassen
+function reset() {
+    if (!currentRoomId) return;
+
+    const gameRef = database.ref('games/' + currentRoomId);
+    const resetState = {
+        field: ["0", " ", " ", " ", " ", " ", " ", " ", " ", " "],
+        currentPlayer: "X",
+        winner: null,
+        status: "playing"
+    };
+
+    gameRef.update(resetState);
+}
+
+// Debug-Funktion um alle aktiven Spiele zu sehen
+function showAllGames() {
+    const gamesRef = database.ref('games');
+    gamesRef.once('value').then((snapshot) => {
+        console.log("=== ALLE AKTIVEN SPIELE ===");
+        if (!snapshot.exists()) {
+            console.log("Keine Spiele gefunden");
+            return;
+        }
+        
+        snapshot.forEach((childSnapshot) => {
+            const gameId = childSnapshot.key;
+            const gameData = childSnapshot.val();
+            console.log(`🎮 Spiel ${gameId}:`, {
+                status: gameData.status,
+                spielerX: gameData.players?.X?.name || "FREI",
+                spielerO: gameData.players?.O?.name || "FREI", 
+                aktuellerSpieler: gameData.currentPlayer,
+                gewinner: gameData.winner
+            });
+        });
+        console.log("=== ENDE ===");
+    });
+}
+
+// Aufruf für Debugging
+showAllGames();
+
+// === AUTOMATISCHE RAUMBEREINIGUNG ===
+function cleanupOldGames() {
+    const gamesRef = database.ref('games');
+    const now = Date.now();
+    const oneHourAgo = now - (60 * 60 * 1000); // 1 Stunde
+    
+    console.log("🧹 Starte Cleanup...");
+    
+    gamesRef.once('value').then((snapshot) => {
+        let deletedCount = 0;
+        const updates = {};
+        
+        snapshot.forEach((childSnapshot) => {
+            const game = childSnapshot.val();
+            const gameId = childSnapshot.key;
+            
+            // Lösche Spiele die:
+            const isVeryOld = game.createdAt < oneHourAgo; // Älter als 1 Stunde
+            const isFinished = game.winner && game.createdAt < (now - 10 * 60 * 1000); // Beendet + 10 min
+            const isWaitingTooLong = game.status === "waiting" && game.createdAt < (now - 30 * 60 * 1000); // Wartet zu lang
+            const wasManuallyClosed = game.manuallyClosed; // Manuell geschlossen
+            
+            if (isVeryOld || isFinished || isWaitingTooLong || wasManuallyClosed) {
+                updates[gameId] = null; // Zum Löschen markieren
+                deletedCount++;
+                console.log("🗑️ Lösche:", gameId, {
+                    status: game.status,
+                    winner: game.winner,
+                    alter: Math.round((now - game.createdAt) / 60000) + "min"
+                });
+            }
+        });
+        
+        // Alle Löschungen auf einmal durchführen
+        if (Object.keys(updates).length > 0) {
+            gamesRef.update(updates)
+                .then(() => console.log(`✅ ${deletedCount} alte Spiele gelöscht`))
+                .catch(err => console.error("❌ Fehler beim Löschen:", err));
+        } else {
+            console.log("✅ Keine alten Spiele gefunden");
+        }
+    });
+}
+
+// === MANUELLES RAUM SCHLIESSEN ===
+function closeRoom() {
+    if (!currentRoomId) {
+        alert("Kein aktiver Raum");
+        return;
+    }
+    
+    if (confirm("Raum wirklich schließen? Das beendet das Spiel für alle Spieler.")) {
+        const gameRef = database.ref('games/' + currentRoomId);
+        
+        // Erst als "manuallyClosed" markieren (für andere Spieler)
+        gameRef.update({
+            manuallyClosed: true,
+            status: "closed",
+            closedBy: currentPlayerName,
+            closedAt: Date.now()
+        }).then(() => {
+            console.log("✅ Raum als geschlossen markiert:", currentRoomId);
+            
+            // Dann lokal zurücksetzen
+            currentRoomId = null;
+            document.getElementById('roomInfo').innerHTML = `
+                <h3>🏁 Raum geschlossen</h3>
+                <p>Von: ${currentPlayerName}</p>
+            `;
+            document.getElementById('status').innerHTML = "Spiel beendet";
+            
+            // Spielfeld zurücksetzen
+            for (let i = 1; i <= 9; i++) {
+                document.getElementById(i.toString()).innerHTML = " ";
+            }
+            
+            // Nach 3 Sekunden komplett löschen
+            setTimeout(() => {
+                gameRef.remove()
+                    .then(() => console.log("✅ Raum endgültig gelöscht"))
+                    .catch(err => console.log("ℹ️ Raum bereits gelöscht"));
+            }, 3000);
+            
+        }).catch(error => {
+            console.error("❌ Fehler:", error);
+            alert("Raum konnte nicht geschlossen werden");
+        });
+    }
+}
+
