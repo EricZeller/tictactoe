@@ -1,5 +1,14 @@
 // === FIREBASE INITIALISIERUNG ===
 // ERSETZE DIESE KONFIGURATION MIT DEINER EIGENEN!
+const firebaseConfig = {
+  apiKey: "AIzaSyCb279ZmIfzGCvF7ipv3Yr2_VnIf0e9yFs",
+  authDomain: "tictactoe-online-ez.firebaseapp.com",
+  databaseURL: "https://tictactoe-online-ez-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "tictactoe-online-ez",
+  storageBucket: "tictactoe-online-ez.firebasestorage.app",
+  messagingSenderId: "294223876689",
+  appId: "1:294223876689:web:22fd36b0eb1179aea81e70"
+};
 
 
 // Firebase initialisieren
@@ -385,33 +394,6 @@ function reset() {
     gameRef.update(resetState);
 }
 
-// Debug-Funktion um alle aktiven Spiele zu sehen
-function showAllGames() {
-    const gamesRef = database.ref('games');
-    gamesRef.once('value').then((snapshot) => {
-        console.log("=== ALLE AKTIVEN SPIELE ===");
-        if (!snapshot.exists()) {
-            console.log("Keine Spiele gefunden");
-            return;
-        }
-        
-        snapshot.forEach((childSnapshot) => {
-            const gameId = childSnapshot.key;
-            const gameData = childSnapshot.val();
-            console.log(`🎮 Spiel ${gameId}:`, {
-                status: gameData.status,
-                spielerX: gameData.players?.X?.name || "FREI",
-                spielerO: gameData.players?.O?.name || "FREI", 
-                aktuellerSpieler: gameData.currentPlayer,
-                gewinner: gameData.winner
-            });
-        });
-        console.log("=== ENDE ===");
-    });
-}
-
-// Aufruf für Debugging
-showAllGames();
 
 // === AUTOMATISCHE RAUMBEREINIGUNG ===
 function cleanupOldGames() {
@@ -424,7 +406,7 @@ function cleanupOldGames() {
     gamesRef.once('value').then((snapshot) => {
         let deletedCount = 0;
         const updates = {};
-        
+        console.log("🧹 Überprüfe Spiele zur Bereinigung...");
         snapshot.forEach((childSnapshot) => {
             const game = childSnapshot.val();
             const gameId = childSnapshot.key;
@@ -435,7 +417,7 @@ function cleanupOldGames() {
             const isWaitingTooLong = game.status === "waiting" && game.createdAt < (now - 30 * 60 * 1000); // Wartet zu lang
             const wasManuallyClosed = game.manuallyClosed; // Manuell geschlossen
             
-            if (isVeryOld || isFinished || isWaitingTooLong || wasManuallyClosed) {
+            if (isVeryOld || isFinished || isWaitingTooLong || wasManuallyClosed || game.status === "closed") {
                 updates[gameId] = null; // Zum Löschen markieren
                 deletedCount++;
                 console.log("🗑️ Lösche:", gameId, {
@@ -500,6 +482,7 @@ function closeRoom() {
             console.error("❌ Fehler:", error);
             alert("Raum konnte nicht geschlossen werden");
         });
+        cleanupOldGames(); 
     }
 }
 
