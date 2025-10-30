@@ -22,7 +22,7 @@
 
 body {
   background-color: var(--backgroundcolor);
-  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 16pt;
   color: var(--textcolor);
 }
@@ -33,6 +33,10 @@ body {
 }
 
 .settings {
+  flex: 1;
+}
+
+.multiplayer {
   flex: 1;
 }
 
@@ -76,7 +80,7 @@ input[type=button] {
   height: 50px;
   text-align: center;
   margin: auto;
-  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  font-family: 'Times New Roman', Times, serif;
   font-style: bold;
   font-size: 16pt;
   background-color: var(--secondcolor);
