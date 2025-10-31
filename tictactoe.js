@@ -22,6 +22,8 @@ let currentRoomId = null;
 let currentSymbol = null;
 let isMyTurn = false;
 
+cleanupOldGames(); 
+
 // === SPIELER LOGIN ===
 function login() {
     const playerName = document.getElementById('playerName').value;
