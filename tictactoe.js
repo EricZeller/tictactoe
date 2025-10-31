@@ -1,5 +1,4 @@
-// === FIREBASE INITIALISIERUNG ===
-// ERSETZE DIESE KONFIGURATION MIT DEINER EIGENEN!
+
 const firebaseConfig = {
   apiKey: "AIzaSyCb279ZmIfzGCvF7ipv3Yr2_VnIf0e9yFs",
   authDomain: "tictactoe-online-ez.firebaseapp.com",
@@ -64,13 +63,10 @@ function createGame() {
         },
         createdAt: Date.now()
     };
-    
-    console.log("Erstelle neues Spiel:", roomId);
-    
+        
     const gameRef = database.ref('games/' + roomId);
     gameRef.set(gameState)
         .then(() => {
-            console.log("Spiel erfolgreich erstellt");
             listenToGame(roomId);
             
             document.getElementById('roomInfo').innerHTML = `
@@ -107,9 +103,6 @@ function joinGame() {
         
         const gameState = snapshot.val();
         
-        console.log("Aktueller Spielzustand:", gameState);
-        console.log("Spieler O:", gameState.players.O);
-        
         // KORREKTUR: Prüfe auf undefined oder null
         const isPlayerOFree = gameState.players.O === null || 
                               gameState.players.O === undefined || 
@@ -118,14 +111,10 @@ function joinGame() {
         const isPlayerXFree = gameState.players.X === null || 
                               gameState.players.X === undefined || 
                               (typeof gameState.players.X === 'object' && Object.keys(gameState.players.X).length === 0);
-        
-        console.log("Ist Spieler O frei?", isPlayerOFree);
-        console.log("Ist Spieler X frei?", isPlayerXFree);
-        
+
         if (isPlayerOFree) {
             currentSymbol = "O";
-            console.log("Beitreten als Spieler O");
-            
+
             // Spieler O hinzufügen
             const playerOData = { 
                 id: currentPlayerId, 
@@ -136,7 +125,6 @@ function joinGame() {
                 'players/O': playerOData,
                 'status': 'playing'
             }).then(() => {
-                console.log("Spieler O erfolgreich hinzugefügt:", playerOData);
                 listenToGame(roomCode);
                 document.getElementById('roomInfo').innerHTML = `
                     <h3>Spielraum: ${currentRoomId}</h3>
@@ -148,7 +136,6 @@ function joinGame() {
             
         } else if (isPlayerXFree) {
             currentSymbol = "X";
-            console.log("Beitreten als Spieler X");
             
             const playerXData = { 
                 id: currentPlayerId, 
@@ -159,7 +146,6 @@ function joinGame() {
                 'players/X': playerXData,
                 'status': 'playing'
             }).then(() => {
-                console.log("Spieler X erfolgreich hinzugefügt:", playerXData);
                 listenToGame(roomCode);
                 document.getElementById('roomInfo').innerHTML = `
                     <h3>Spielraum: ${currentRoomId}</h3>
@@ -170,7 +156,6 @@ function joinGame() {
             });
             
         } else {
-            console.log("Beide Plätze belegt - Spieler X:", gameState.players.X, "Spieler O:", gameState.players.O);
             alert("Raum ist bereits voll! Spieler X: " + 
                   (gameState.players.X?.name || "unbekannt") + 
                   ", Spieler O: " + 
@@ -190,11 +175,9 @@ function listenToGame(roomId) {
     gameRef.on('value', (snapshot) => {
         const gameState = snapshot.val();
         if (!gameState) {
-            console.log("Spielraum wurde gelöscht");
             return;
         }
         
-        console.log("Spielupdate erhalten:", gameState);
         updateGameUI(gameState);
         updateGameStatus(gameState);
     });
@@ -269,12 +252,8 @@ function makeMove(cellId) {
         const updatedField = [...gameState.field]; // Kopie des Feldes
         updatedField[cellId] = currentSymbol; // Zug hinzufügen
         
-        console.log("Altes Feld:", gameState.field);
-        console.log("Neues Feld mit Zug:", updatedField);
-        
         // **Gewinner mit dem AKTUALISIERTEN Feld prüfen**
         const gameResult = checkWinner(updatedField, cellId);
-        console.log("Gewinner-Check ergibt:", gameResult);
         
         // Updates vorbereiten
         const updates = {};
@@ -296,12 +275,6 @@ function makeMove(cellId) {
         
         // Update zu Firebase senden
         gameRef.update(updates)
-            .then(() => {
-                console.log("Zug erfolgreich gemacht auf Feld", cellId);
-                if (gameResult) {
-                    console.log("Spiel beendet! Ergebnis:", gameResult);
-                }
-            })
             .catch((error) => {
                 console.error("Fehler beim Zug:", error);
             });
@@ -402,13 +375,10 @@ function cleanupOldGames() {
     const gamesRef = database.ref('games');
     const now = Date.now();
     const oneHourAgo = now - (60 * 60 * 1000); // 1 Stunde
-    
-    console.log("🧹 Starte Cleanup...");
-    
+        
     gamesRef.once('value').then((snapshot) => {
         let deletedCount = 0;
         const updates = {};
-        console.log("🧹 Überprüfe Spiele zur Bereinigung...");
         snapshot.forEach((childSnapshot) => {
             const game = childSnapshot.val();
             const gameId = childSnapshot.key;
@@ -422,21 +392,13 @@ function cleanupOldGames() {
             if (isVeryOld || isFinished || isWaitingTooLong || wasManuallyClosed || game.status === "closed") {
                 updates[gameId] = null; // Zum Löschen markieren
                 deletedCount++;
-                console.log("🗑️ Lösche:", gameId, {
-                    status: game.status,
-                    winner: game.winner,
-                    alter: Math.round((now - game.createdAt) / 60000) + "min"
-                });
             }
         });
         
         // Alle Löschungen auf einmal durchführen
         if (Object.keys(updates).length > 0) {
             gamesRef.update(updates)
-                .then(() => console.log(`✅ ${deletedCount} alte Spiele gelöscht`))
                 .catch(err => console.error("❌ Fehler beim Löschen:", err));
-        } else {
-            console.log("✅ Keine alten Spiele gefunden");
         }
     });
 }
@@ -457,9 +419,7 @@ function closeRoom() {
             status: "closed",
             closedBy: currentPlayerName,
             closedAt: Date.now()
-        }).then(() => {
-            console.log("✅ Raum als geschlossen markiert:", currentRoomId);
-            
+        }).then(() => {            
             // Dann lokal zurücksetzen
             currentRoomId = null;
             document.getElementById('roomInfo').innerHTML = `
@@ -476,8 +436,6 @@ function closeRoom() {
             // Nach 3 Sekunden komplett löschen
             setTimeout(() => {
                 gameRef.remove()
-                    .then(() => console.log("✅ Raum endgültig gelöscht"))
-                    .catch(err => console.log("ℹ️ Raum bereits gelöscht"));
             }, 3000);
             
         }).catch(error => {
